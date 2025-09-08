@@ -1,0 +1,13 @@
+FROM node:20
+
+WORKDIR /var/www
+
+COPY package.json yarn.lock ./
+RUN yarn install
+
+COPY . .
+
+COPY docker/node-entrypoint.sh /usr/local/bin/node-entrypoint.sh
+RUN chmod +x /usr/local/bin/node-entrypoint.sh
+
+ENTRYPOINT ["node-entrypoint.sh"]
