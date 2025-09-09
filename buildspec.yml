@@ -1,3 +1,4 @@
+---
 version: 0.2
 
 env:
@@ -13,7 +14,7 @@ phases:
     commands:
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - echo "Account: ${ECR_ACCOUNT}, Region: ${AWS_REGION}"
+      - 'echo "Account: ${ECR_ACCOUNT}, Region: ${AWS_REGION}"'
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "Image tag will be ${IMAGE_TAG}"
