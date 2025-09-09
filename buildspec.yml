@@ -1,0 +1,40 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "us-east-1"
+    ECR_ACCOUNT: "727646469309"
+    REPO_APP: "laravel-app"
+    REPO_NODE: "laravel-node"
+    REPO_NGINX: "laravel-nginx"
+    IMAGE_TAG: "$CODEBUILD_RESOLVED_SOURCE_VERSION"
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building laravel-app...
+      - docker build -t $REPO_APP -f Dockerfile .
+      - docker tag $REPO_APP:latest $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_APP:$IMAGE_TAG
+      - echo Building laravel-node...
+      - docker build -t $REPO_NODE -f Dockerfile.node .
+      - docker tag $REPO_NODE:latest $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NODE:$IMAGE_TAG
+      - echo Building laravel-nginx...
+      - docker build -t $REPO_NGINX -f Dockerfile.nginx .
+      - docker tag $REPO_NGINX:latest $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NGINX:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Pushing images...
+      - docker push $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_APP:$IMAGE_TAG
+      - docker push $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NODE:$IMAGE_TAG
+      - docker push $ECR_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NGINX:$IMAGE_TAG
+      - echo Creating imagedefinitions.json...
+      - printf '[{"name":"laravel-app","imageUri":"%s.dkr.ecr.%s.amazonaws.com/%s:%s"},{"name":"laravel-node","imageUri":"%s.dkr.ecr.%s.amazonaws.com/%s:%s"},{"name":"laravel-nginx","imageUri":"%s.dkr.ecr.%s.amazonaws.com/%s:%s"}]' $ECR_ACCOUNT $AWS_REGION $REPO_APP $IMAGE_TAG $ECR_ACCOUNT $AWS_REGION $REPO_NODE $IMAGE_TAG $ECR_ACCOUNT $AWS_REGION $REPO_NGINX $IMAGE_TAG > imagedefinitions.json
+artifacts:
+  files:
+    - imagedefinitions.json
