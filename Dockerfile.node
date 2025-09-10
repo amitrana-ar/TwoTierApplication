@@ -7,7 +7,8 @@ RUN yarn install
 
 COPY . .
 
-COPY docker/node-entrypoint.sh /usr/local/bin/node-entrypoint.sh
-RUN chmod +x /usr/local/bin/node-entrypoint.sh
+# Build production assets
+RUN yarn build
 
-ENTRYPOINT ["node-entrypoint.sh"]
+# No need for yarn dev in production
+CMD ["yarn", "start"]
