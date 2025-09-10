@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd dom xml
 
 # Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+#COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=public.ecr.aws/docker/library/composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www
