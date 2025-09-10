@@ -1,13 +1,14 @@
-FROM public.ecr.aws/docker/library/node:20
+# Stage 1: Build frontend assets
+FROM public.ecr.aws/docker/library/node:20 AS builder
 
 WORKDIR /var/www
 
+# Copy dependency files and install
 COPY package.json yarn.lock ./
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
+# Copy source code
 COPY . .
 
-COPY docker/node-entrypoint.sh /usr/local/bin/node-entrypoint.sh
-RUN chmod +x /usr/local/bin/node-entrypoint.sh
-
-ENTRYPOINT ["node-entrypoint.sh"]
+# Build frontend assets
+RUN yarn build
