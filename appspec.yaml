@@ -1,10 +1,9 @@
-appspec.yamlversion: 0.0
+version: 1
 Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "REPLACED_BY_CODEDEPLOY"
+        TaskDefinition: <TASK_DEFINITION>
         LoadBalancerInfo:
-          ContainerName: "laravel-nginx"
-          ContainerPort: 8000
-
+          ContainerName: laravel-nginx
+          ContainerPort: 80
