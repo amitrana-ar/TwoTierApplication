@@ -1,0 +1,60 @@
+---
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws --version
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 727646469309.dkr.ecr.us-east-1.amazonaws.com
+      - IMAGE_TAG=latest
+      - echo "Image tag will be ${IMAGE_TAG}"
+
+  build:
+    commands:
+      - echo "Build started on $(date)"
+
+      - echo "Building laravel-app..."
+      - docker build -t laravel-app -f Dockerfile .
+      - docker tag laravel-app:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest
+
+      - echo "Building laravel-node..."
+      - docker build -t laravel-node -f Dockerfile.node .
+      - docker tag laravel-node:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
+
+      - echo "Building laravel-nginx..."
+      - docker build -t laravel-nginx -f Dockerfile.nginx .
+      - docker tag laravel-nginx:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
+
+  post_build:
+    commands:
+      - echo "Pushing images to ECR..."
+      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest
+      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
+      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
+
+      - echo "Creating imagedefinitions.json..."
+      - |
+        cat > imagedefinitions.json <<EOF
+        [
+          {
+            "name": "laravel-app",
+            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest"
+          },
+          {
+            "name": "laravel-node",
+            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest"
+          },
+          {
+            "name": "laravel-nginx",
+            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest"
+          }
+        ]
+        EOF
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - taskdef.json
+    - appspec.yml

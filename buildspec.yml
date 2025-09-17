@@ -1,60 +1,45 @@
----
 version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "us-east-1"
+    ACCOUNT_ID: "727646469309"
+    REPO_APP: "laravel-app"
+    REPO_NODE: "laravel-node"
+    REPO_NGINX: "laravel-nginx"
 
 phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 727646469309.dkr.ecr.us-east-1.amazonaws.com
-      - IMAGE_TAG=latest
-      - echo "Image tag will be ${IMAGE_TAG}"
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - REPO_APP_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_APP
+      - REPO_NODE_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NODE
+      - REPO_NGINX_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NGINX
+      - echo "Repositories: $REPO_APP_URI, $REPO_NODE_URI, $REPO_NGINX_URI"
 
   build:
     commands:
-      - echo "Build started on $(date)"
-
-      - echo "Building laravel-app..."
-      - docker build -t laravel-app -f Dockerfile .
-      - docker tag laravel-app:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest
-
-      - echo "Building laravel-node..."
-      - docker build -t laravel-node -f Dockerfile.node .
-      - docker tag laravel-node:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
-
-      - echo "Building laravel-nginx..."
-      - docker build -t laravel-nginx -f Dockerfile.nginx .
-      - docker tag laravel-nginx:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
+      - echo "Building Docker images..."
+      - docker build -t $REPO_APP_URI:latest ./laravel-app
+      - docker build -t $REPO_NODE_URI:latest ./laravel-node
+      - docker build -t $REPO_NGINX_URI:latest ./laravel-nginx
 
   post_build:
     commands:
-      - echo "Pushing images to ECR..."
-      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest
-      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
-      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
+      - echo "Pushing Docker images..."
+      - docker push $REPO_APP_URI:latest
+      - docker push $REPO_NODE_URI:latest
+      - docker push $REPO_NGINX_URI:latest
 
-      - echo "Creating imagedefinitions.json..."
-      - |
-        cat > imagedefinitions.json <<EOF
-        [
-          {
-            "name": "laravel-app",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest"
-          },
-          {
-            "name": "laravel-node",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest"
-          },
-          {
-            "name": "laravel-nginx",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest"
-          }
-        ]
-        EOF
+      - echo "Writing imagedefinitions.json..."
+      - printf '[{"name":"laravel-app","imageUri":"%s"},{"name":"laravel-node","imageUri":"%s"},{"name":"laravel-nginx","imageUri":"%s"}]' \
+        $REPO_APP_URI:latest $REPO_NODE_URI:latest $REPO_NGINX_URI:latest > imagedefinitions.json
       - cat imagedefinitions.json
 
 artifacts:
   files:
-    - imagedefinitions.json
-    - taskdef.json
     - appspec.yml
+    - taskdef.json
+    - imagedefinitions.json
