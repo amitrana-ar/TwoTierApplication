@@ -53,8 +53,8 @@ phases:
 #        EOF
 #      - cat imagedefinitions.json
 
-#artifacts:
- # files:
+artifacts:
+  files:
    # - imagedefinitions.json
-   # - taskdef.json
-   # - appspec.yml
+    - taskdef.json
+    - appspec.yml
