@@ -4,21 +4,21 @@
   "containerDefinitions": [
     {
       "name": "laravel-app",
-      "image": "<laravel-app>",
+      "image": "<IMAGE1_NAME>",
       "essential": true,
       "memory": 512,
       "cpu": 256
     },
     {
       "name": "laravel-node",
-      "image": "<laravel-node>",
+      "image": "<IMAGE2_NAME>",
       "essential": true,
       "memory": 512,
       "cpu": 256
     },
     {
       "name": "laravel-nginx",
-      "image": "<laravel-nginx>",
+      "image": "<IMAGE3_NAME>",
       "essential": true,
       "portMappings": [
         {
