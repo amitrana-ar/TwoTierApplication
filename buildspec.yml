@@ -1,3 +1,4 @@
+---
 version: 0.2
 
 phases:
@@ -5,21 +6,32 @@ phases:
     commands:
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 727646469309.dkr.ecr.us-east-1.amazonaws.com
+      - IMAGE_TAG=latest
+      - echo "Image tag will be ${IMAGE_TAG}"
+
   build:
     commands:
-      - echo "Building Docker images..."
-      - docker build -t $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-app:$IMAGE_TAG -f Dockerfile .
-      - docker build -t $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-node:$IMAGE_TAG -f Dockerfile.node .
-      - docker build -t $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-nginx:$IMAGE_TAG -f Dockerfile.nginx .
+      - echo "Build started on $(date)"
+
+      - echo "Building laravel-app..."
+      - docker build -t laravel-app -f Dockerfile .
+      - docker tag laravel-app:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest
+
+      - echo "Building laravel-node..."
+      - docker build -t laravel-node -f Dockerfile.node .
+      - docker tag laravel-node:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
+
+      - echo "Building laravel-nginx..."
+      - docker build -t laravel-nginx -f Dockerfile.nginx .
+      - docker tag laravel-nginx:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
+
   post_build:
     commands:
-      - echo "Pushing Docker images..."
-      - docker push $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-app:$IMAGE_TAG
-      - docker push $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-node:$IMAGE_TAG
-      - docker push $ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-nginx:$IMAGE_TAG
+      - echo "Pushing images to ECR..."
+      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest
+      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
+      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
 
       - echo "Creating imagedefinitions.json..."
       - |
@@ -27,18 +39,19 @@ phases:
         [
           {
             "name": "laravel-app",
-            "imageUri": "$ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-app:$IMAGE_TAG"
+            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest"
           },
           {
             "name": "laravel-node",
-            "imageUri": "$ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-node:$IMAGE_TAG"
+            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest"
           },
           {
             "name": "laravel-nginx",
-            "imageUri": "$ECR_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/laravel-nginx:$IMAGE_TAG"
+            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest"
           }
         ]
         EOF
+      - cat imagedefinitions.json
 
 artifacts:
   files:

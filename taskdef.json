@@ -1,48 +1,20 @@
 {
-  "family": "laravel-ecs-family",
+  "family": "laravel-app",
   "executionRoleArn": "arn:aws:iam::727646469309:role/ecsTaskExecutionRole",
-  "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "1024",
-  "memory": "2048",
   "containerDefinitions": [
     {
       "name": "laravel-app",
       "image": "<IMAGE1_NAME>",
       "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 9000,
-          "protocol": "tcp"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/laravel-app",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "ecs"
-        }
-      }
+      "memory": 512,
+      "cpu": 256
     },
     {
       "name": "laravel-node",
       "image": "<IMAGE2_NAME>",
       "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 3000,
-          "protocol": "tcp"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/laravel-node",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "ecs"
-        }
-      }
+      "memory": 512,
+      "cpu": 256
     },
     {
       "name": "laravel-nginx",
@@ -51,17 +23,9 @@
       "portMappings": [
         {
           "containerPort": 80,
-          "protocol": "tcp"
+          "hostPort": 80
         }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/laravel-nginx",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "ecs"
-        }
-      }
+      ]
     }
   ]
 }
