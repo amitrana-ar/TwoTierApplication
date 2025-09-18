@@ -33,28 +33,28 @@ phases:
       - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest
       - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest
 
-      - echo "Creating imagedefinitions.json..."
-      - |
-        cat > imagedefinitions.json <<EOF
-        [
-          {
-            "name": "laravel-app",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest"
-          },
-          {
-            "name": "laravel-node",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest"
-          },
-          {
-            "name": "laravel-nginx",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest"
-          }
-        ]
-        EOF
-      - cat imagedefinitions.json
+#      - echo "Creating imagedefinitions.json..."
+#      - |
+#        cat > imagedefinitions.json <<EOF
+#        [
+#          {
+#            "name": "laravel-app",
+#            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest"
+#          },
+#          {
+#            "name": "laravel-node",
+#            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest"
+#          },
+#          {
+#            "name": "laravel-nginx",
+#            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest"
+#          }
+#        ]
+#        EOF
+#      - cat imagedefinitions.json
 
-artifacts:
-  files:
+#artifacts:
+ # files:
    # - imagedefinitions.json
-    - taskdef.json
-    - appspec.yml
+   # - taskdef.json
+   # - appspec.yml
