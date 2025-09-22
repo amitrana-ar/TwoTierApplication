@@ -98,34 +98,170 @@ docker exec -it laravel-app php artisan migrate
 
 ---
 
-## 🔐 Environment & Secrets
-- `.env` file stored securely in **S3** (fetched at deployment).  
-- Database and API secrets managed in **AWS Secrets Manager**.  
-- Do **not** commit `.env` to GitHub.
+## 📜 Deployment Configurations
+
+### buildspec.yml
+```yaml
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws --version
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+      - IMAGE_TAG=latest
+      - echo "Image tag will be ${IMAGE_TAG}"
+
+  build:
+    commands:
+      - echo "Build started on $(date)"
+
+      - echo "Building laravel-app..."
+      - docker build -t laravel-app -f Dockerfile .
+      - docker tag laravel-app:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}
+
+      - echo "Building laravel-node..."
+      - docker build -t laravel-node -f Dockerfile.node .
+      - docker tag laravel-node:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}
+
+      - echo "Building laravel-nginx..."
+      - docker build -t laravel-nginx -f Dockerfile.nginx .
+      - docker tag laravel-nginx:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}
+
+  post_build:
+    commands:
+      - echo "Pushing images to ECR..."
+      - docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}
+      - docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}
+      - docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}
+
+      - echo "Creating imagedefinitions.json..."
+      - |
+        cat > imagedefinitions.json <<EOF
+        [
+          {
+            "name": "laravel-app",
+            "imageUri": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}"
+          },
+          {
+            "name": "laravel-node",
+            "imageUri": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}"
+          },
+          {
+            "name": "laravel-nginx",
+            "imageUri": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}"
+          }
+        ]
+        EOF
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - taskdef.json
+    - appspec.yml
+```
 
 ---
 
-## 📊 Monitoring & Logs
-- Application & ECS logs → **CloudWatch Logs**  
-- Deployment status → **SNS Notifications**  
+### appspec.yml
+```yaml
+version: 1
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TASK_DEFINITION>
+        LoadBalancerInfo:
+          ContainerName: laravel-nginx
+          ContainerPort: 80
+```
 
 ---
 
-## 📜 Deployment Notes
-- Deployment type: **Blue/Green (ECS Fargate)**  
-- Load balancing via **Application Load Balancer (ALB)**  
-- Health checks configured on `/` route  
+### taskdef.json
+```json
+{
+  "family": "laravel-app",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "cpu": "1024",
+  "memory": "2048",
+  "requiresCompatibilities": ["FARGATE"],
+  "containerDefinitions": [
+    {
+      "name": "laravel-app",
+      "image": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-app:latest",
+      "essential": true,
+      "memory": 512,
+      "cpu": 256,
+      "environment": [
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/laravel-app",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "laravel-node",
+      "image": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-node:latest",
+      "essential": true,
+      "memory": 512,
+      "cpu": 256,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/laravel-node",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "laravel-nginx",
+      "image": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:latest",
+      "essential": true,
+      "memory": 512,
+      "cpu": 256,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/laravel-nginx",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
+```
 
 ---
 
-## 🤝 Contribution
-1. Fork the repo  
-2. Create a feature branch (`git checkout -b feature/my-feature`)  
-3. Commit your changes (`git commit -m 'Added new feature'`)  
-4. Push to GitHub (`git push origin feature/my-feature`)  
-5. Create a Pull Request  
+## ✨ Author Note
+This high-secure infrastructure setup and automation is designed & implemented by **Amit Rana** 💡  
+Feel free to explore, learn, and adapt this for your own projects.
 
 ---
-
-## 📄 License
-Licensed under the [MIT License](LICENSE).  

@@ -6,7 +6,7 @@ phases:
     commands:
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 727646469309.dkr.ecr.us-east-1.amazonaws.com
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
       - IMAGE_TAG=latest
       - echo "Image tag will be ${IMAGE_TAG}"
 
@@ -16,22 +16,22 @@ phases:
 
       - echo "Building laravel-app..."
       - docker build -t laravel-app -f Dockerfile .
-      - docker tag laravel-app:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}
+      - docker tag laravel-app:latest AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}
 
       - echo "Building laravel-node..."
       - docker build -t laravel-node -f Dockerfile.node .
-      - docker tag laravel-node:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}
+      - docker tag laravel-node:latest AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}
 
       - echo "Building laravel-nginx..."
       - docker build -t laravel-nginx -f Dockerfile.nginx .
-      - docker tag laravel-nginx:latest 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}
+      - docker tag laravel-nginx:latest AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}
 
   post_build:
     commands:
       - echo "Pushing images to ECR..."
-      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}
-      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}
-      - docker push 727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}
+      - docker push AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}
+      - docker push AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}
+      - docker push AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}
 
       - echo "Creating imagedefinitions.json..."
       - |
@@ -39,15 +39,15 @@ phases:
         [
           {
             "name": "laravel-app",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}"
+            "imageUri": "AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-app:${IMAGE_TAG}"
           },
           {
             "name": "laravel-node",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}"
+            "imageUri": "AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-node:${IMAGE_TAG}"
           },
           {
             "name": "laravel-nginx",
-            "imageUri": "727646469309.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}"
+            "imageUri": "AWSACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/laravel-nginx:${IMAGE_TAG}"
           }
         ]
         EOF
