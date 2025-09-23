@@ -53,6 +53,13 @@ TwoTierApplication/
 │── vite.config.js
 │── .env (stored in S3 for production)
 ```
+---
+
+### Architecture Diagram
+
+![AWS Two-Tier Blue/Green Deployment](AWS-ECS-RDS.png)
+
+*Figure: Zero-downtime automated deployment with Blue/Green ECS environments.*
 
 ---
 
@@ -73,7 +80,7 @@ docker-compose up -d --build
 docker exec -it laravel-app php artisan migrate
 ```
 
-- Laravel API available at: `http://localhost:8000`  
+- Laravel API available at: `http://localhost:9000`  
 - Node frontend available at: `http://localhost:3000`
 
 ---
