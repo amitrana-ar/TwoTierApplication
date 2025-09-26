@@ -264,6 +264,16 @@ Resources:
   ]
 }
 ```
+### Script for Create a ecs-service:
+ aws ecs create-service \
+  --cluster laravel-cluster \
+  --service-name laravel-service \
+  --task-definition laravel-task \
+  --desired-count 14 \
+  --launch-type FARGATE \
+  --deployment-controller type=CODE_DEPLOY \
+  --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:<AWS_ACCOUNT_ID>:targetgroup/laravel-ecs-tg1/5c7c0e1579ba0058,containerName=laravel-nginx,containerPort=80" \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-05e86a0bf15ad314d,subnet-0b2d8f643d8ee3fce,subnet-02efe7988e3b6844d,subnet-0e23736c5c9ba4867,subnet-0f4f44b1752102ffe,subnet-06138883791a7abf6],securityGroups=[sg-0ce7cb0defc3cbc27],assignPublicIp=ENABLED}"
 
 ---
 
